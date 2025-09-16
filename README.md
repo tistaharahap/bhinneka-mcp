@@ -1,6 +1,6 @@
 # Bhinneka MCP Toolkit
 
-A FastMCP server that provides both Google Flights utilities and SearXNG web search via Model Context Protocol (MCP). Search for flights, look up airports, and perform web/news/image searches with standardized MCP tools.
+A FastMCP server that provides Google Flights utilities, SearXNG web search, safe URL fetching with optional JS rendering, and Context7 documentation search — all via the Model Context Protocol (MCP).
 
 ## Features
 
@@ -8,6 +8,9 @@ A FastMCP server that provides both Google Flights utilities and SearXNG web sea
 - **Airport Lookup**: Search airports by code, name, or city with comprehensive database
 - **Price Optimization**: Get cheapest flight options sorted by price
 - **Best Flights**: Access Google's recommended flight selections
+- **SearXNG Search**: Web/news/image search via a JSON SearXNG backend
+- **URL Fetch**: Safe static fetch (HTML-to-text) + optional Playwright JS rendering for SPAs
+- **Context7 Docs**: Search libraries and retrieve documentation text
 - **Multiple Transports**: Support for stdio (development) and HTTP (production) modes
 - **CLI Interface**: Built-in testing and management commands
 
@@ -187,7 +190,7 @@ Get server status and capabilities information.
 
 ### SearXNG Web Search Tools
 
-These tools require `SEARXNG_BASE_URL` to be set (e.g., `https://searxng-dxb.bango29.com`).
+These tools require `SEARXNG_BASE_URL` to be set (e.g., `https://your-searxng.example`).
 
 - `searx_web_search(query, engines?, language?, time_range?, safesearch?, max_results?)`
   General web search. Returns a concise, readable list.
@@ -213,6 +216,16 @@ Notes:
 - With `text_only=true` (default), HTML/CSS/JS are stripped.
 - SPAs often require `render_js=true` to capture dynamic content.
 - Non-HTML types (JSON, text/plain) are returned as pretty text.
+
+### Context7 Documentation Tools
+
+Search libraries and retrieve documentation text from Context7.
+
+- `context7_search(query, client_ip?, api_key?, return_json=false)`
+  Searches Context7 libraries by query. Returns a readable list or JSON when `return_json=true`.
+
+- `context7_fetch(library_id, tokens?, topic?, type_hint?, client_ip?, api_key?)`
+  Fetches documentation for a specific library ID. Defaults to `type=txt`. Returns the documentation text or an error message if unavailable.
 
 ### Context7 Documentation Tools
 
@@ -268,17 +281,28 @@ rye run ruff format
 - **stdio**: For MCP Inspector and direct client integration
 - **streamable-http**: For remote access and production deployments
 
-### Environment Variables
+### Environment Variables by Tool
 
-The server uses standard MCP environment variables and configurations.
+General
+- `PLAYWRIGHT_BROWSERS_PATH` (Docker sets `/ms-playwright`)
 
-Google Flights tools do not require API keys as they use public data via the `fast-flights` library.
+Flights (`flights_*`)
+- No keys required. Uses public data via `fast-flights`.
 
-SearXNG tools configuration:
-- `SEARXNG_BASE_URL` (required for `searx_*` tools), e.g. `https://searxng-dxb.bango29.com`
+SearXNG (`searx_*`)
+- `SEARXNG_BASE_URL` (required), e.g., `https://your-searxng.example`
 - `SEARXNG_TIMEOUT` (seconds, default: 8)
 - `SEARXNG_MAX_RESULTS` (default: 10)
 - `SEARXNG_LANGUAGE` (default: `en`)
+
+URL Fetch (`fetch_url`, `fetch_url_rendered`)
+- No environment variables required. JS rendering requires Playwright + Chromium installed (Dockerfile handles this).
+
+Context7 (`context7_*`)
+- `CONTEXT7_BASE_URL` (default: `https://context7.com/api`)
+- `CONTEXT7_API_KEY` (optional): Bearer token for private access
+- `CONTEXT7_TIMEOUT` (seconds, default: 15)
+- `CLIENT_IP_ENCRYPTION_KEY` (optional, hex-64). If present, client IP may be included (encryption currently not applied; plaintext header is sent when provided).
 
 ## Docker Deployment
 
