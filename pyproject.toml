@@ -1,6 +1,6 @@
 [project]
 name = "bhinneka"
-version = "0.1.0"
+version = "0.2.0"
 description = "Unified MCP toolkit: Google Flights utilities and SearXNG web search"
 authors = [
     { name = "Batista Harahap", email = "batista@bango29.com" }
@@ -28,6 +28,7 @@ build-backend = "hatchling.build"
 managed = true
 dev-dependencies = [
     "ruff>=0.13.0",
+    "twine>=6.2.0",
 ]
 
 [tool.hatch.metadata]
