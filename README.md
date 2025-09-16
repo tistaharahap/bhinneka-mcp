@@ -31,11 +31,11 @@ pip install google-flights-mcp
 ### MCP Server Modes
 
 ```bash
-# Development mode (stdio transport for MCP clients)
-uvx google-flights-mcp dev
+# Default mode (stdio transport for Claude Desktop and MCP clients)
+uvx google-flights-mcp serve
 
-# Production mode (HTTP server for remote access)
-uvx google-flights-mcp serve --host 0.0.0.0 --port 8000
+# HTTP mode (for remote access)
+uvx google-flights-mcp serve --transport http --host 0.0.0.0 --port 8000
 
 # Check server status and capabilities
 uvx google-flights-mcp status
@@ -60,9 +60,9 @@ The package also provides a shorter `gf` command:
 
 ```bash
 # All commands work with the shorter alias
-uvx google-flights-mcp dev
+uvx google-flights-mcp serve
 # is equivalent to
-uvx --from google-flights-mcp gf dev
+uvx --from google-flights-mcp gf serve
 ```
 
 ## MCP Integration
@@ -72,7 +72,7 @@ uvx --from google-flights-mcp gf dev
 For development and testing with MCP Inspector:
 
 ```bash
-uvx google-flights-mcp dev
+uvx google-flights-mcp serve
 ```
 
 Then connect your MCP client to the stdio transport.
@@ -82,10 +82,59 @@ Then connect your MCP client to the stdio transport.
 For production use or remote MCP clients:
 
 ```bash
-uvx google-flights-mcp serve --host 0.0.0.0 --port 8000
+uvx google-flights-mcp serve --transport http --host 0.0.0.0 --port 8000
 ```
 
 MCP clients can connect to: `http://your-server:8000/mcp`
+
+### With Claude Desktop
+
+To use this MCP server with Claude Desktop, add the following configuration to your Claude Desktop settings:
+
+```json
+{
+  "mcpServers": {
+    "google-flights": {
+      "command": "uvx",
+      "args": [
+        "google-flights-mcp",
+        "serve"
+      ]
+    }
+  }
+}
+```
+
+This configuration will:
+- Automatically install the latest version using `uvx`
+- Run the server with stdio transport (default for Claude Desktop)
+- Make flight search tools available in Claude Desktop
+
+After adding this configuration, restart Claude Desktop and you'll have access to all the flight search tools directly in your conversations.
+
+#### Alternative Configuration with HTTP Transport
+
+For advanced users who prefer HTTP transport for remote access:
+
+```json
+{
+  "mcpServers": {
+    "google-flights": {
+      "command": "uvx",
+      "args": [
+        "google-flights-mcp",
+        "serve",
+        "--transport",
+        "http",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ]
+    }
+  }
+}
+```
 
 ## Available MCP Tools
 
@@ -135,14 +184,14 @@ Get server status and capabilities information.
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/tistaharahap/google-flights-mcp
 cd google-flights-mcp
 
 # Install dependencies
 rye sync
 
-# Run in development mode
-rye run python -m google_flights_mcp.cli dev
+# Run the MCP server
+rye run python -m google_flights_mcp.cli serve
 
 # Run tests
 rye run python -m google_flights_mcp.cli test-search LAX JFK 2025-12-25

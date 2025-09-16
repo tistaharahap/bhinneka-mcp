@@ -26,14 +26,14 @@ console = Console()
 def serve_command(
     host: Annotated[str, typer.Option("--host", "-h", help="Host to bind the server to")] = "127.0.0.1",
     port: Annotated[int, typer.Option("--port", "-p", help="Port to bind the server to")] = 8000,
-    transport: Annotated[str, typer.Option("--transport", "-t", help="Transport protocol to use")] = "streamable-http",
+    transport: Annotated[str, typer.Option("--transport", "-t", help="Transport protocol: 'stdio' or 'http'")] = "stdio",
     log_level: Annotated[str, typer.Option("--log-level", "-l", help="Logging level")] = "INFO",
 ) -> None:
     """
     🚀 Start the Google Flights MCP server.
 
-    This starts the server in production mode using streamable HTTP transport,
-    suitable for remote access and integration with MCP clients.
+    By default uses stdio transport for Claude Desktop and MCP clients.
+    Use --transport http for remote HTTP access.
     """
     try:
         # Set log level
@@ -44,27 +44,49 @@ def serve_command(
         # Create and configure server
         mcp = create_server()
 
-        # Display startup info
-        startup_panel = Panel.fit(
-            f"[bold green]🛫 Google Flights MCP Server[/bold green]\n\n"
-            f"[cyan]Transport:[/cyan] {transport}\n"
-            f"[cyan]Host:[/cyan] {host}\n"
-            f"[cyan]Port:[/cyan] {port}\n"
-            f"[cyan]Log Level:[/cyan] {log_level}\n\n"
-            f"[yellow]Server URL:[/yellow] http://{host}:{port}/mcp\n"
-            f"[dim]Press Ctrl+C to stop[/dim]",
-            title="Server Starting",
-            border_style="green",
-        )
-        rprint(startup_panel)
+        # Handle transport types
+        if transport.lower() == "stdio":
+            # stdio transport for Claude Desktop
+            startup_panel = Panel.fit(
+                f"[bold green]🛫 Google Flights MCP Server[/bold green]\n\n"
+                f"[cyan]Transport:[/cyan] stdio\n"
+                f"[cyan]Log Level:[/cyan] {log_level}\n\n"
+                f"[yellow]Ready for Claude Desktop and MCP clients[/yellow]\n"
+                f"[dim]Press Ctrl+C to stop[/dim]",
+                title="MCP Server Starting",
+                border_style="green",
+            )
+            rprint(startup_panel)
 
-        # Start the server
-        mcp.run(
-            transport=transport,
-            host=host,
-            port=port,
-            log_level=log_level.lower(),
-        )
+            # Start in stdio mode
+            mcp.run(transport="stdio")
+
+        elif transport.lower() == "http":
+            # HTTP transport for remote access
+            actual_transport = "streamable-http"
+            startup_panel = Panel.fit(
+                f"[bold green]🛫 Google Flights MCP Server[/bold green]\n\n"
+                f"[cyan]Transport:[/cyan] {actual_transport}\n"
+                f"[cyan]Host:[/cyan] {host}\n"
+                f"[cyan]Port:[/cyan] {port}\n"
+                f"[cyan]Log Level:[/cyan] {log_level}\n\n"
+                f"[yellow]Server URL:[/yellow] http://{host}:{port}/mcp\n"
+                f"[dim]Press Ctrl+C to stop[/dim]",
+                title="HTTP Server Starting",
+                border_style="green",
+            )
+            rprint(startup_panel)
+
+            # Start the HTTP server
+            mcp.run(
+                transport=actual_transport,
+                host=host,
+                port=port,
+                log_level=log_level.lower(),
+            )
+        else:
+            rprint(f"[red]❌ Invalid transport: {transport}. Use 'stdio' or 'http'[/red]")
+            raise typer.Exit(1)
 
     except KeyboardInterrupt:
         rprint("\n[yellow]👋 Server stopped gracefully[/yellow]")
