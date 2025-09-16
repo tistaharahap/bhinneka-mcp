@@ -294,7 +294,7 @@ async def fetch_url_impl(
     *,
     text_only: bool = True,
     render_js: bool = False,
-    timeout: float = 30.0,
+    timeout: float = 120.0,
     max_bytes: int = 2_000_000,
     follow_redirects: bool = True,
     extract_links: bool = False,
