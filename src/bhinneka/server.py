@@ -14,6 +14,7 @@ from bhinneka.tools import (
     _get_best_flights_impl,
     _get_cheapest_flights_impl,
     _search_flights_impl,
+    fetch_url_impl,
     searx_search_impl,
 )
 
@@ -184,6 +185,63 @@ async def searx_search_json(
         safesearch=safesearch,
         max_results=max_results,
         return_json=True,
+    )
+
+
+# =========================
+# Fetch/Browse MCP tools
+# =========================
+
+
+@mcp.tool()
+async def fetch_url(
+    url: str,
+    text_only: bool = True,
+    render_js: bool = False,
+    timeout: float = 10.0,
+    max_bytes: int = 2_000_000,
+    follow_redirects: bool = True,
+    extract_links: bool = False,
+    return_json: bool = False,
+) -> str:
+    """Fetch a URL safely and return readable text.
+
+    - Blocks localhost and private networks
+    - Strips HTML/CSS/JS by default (text_only=True)
+    - Set render_js=True to render SPAs via Playwright
+    """
+    return await fetch_url_impl(
+        url,
+        text_only=text_only,
+        render_js=render_js,
+        timeout=timeout,
+        max_bytes=max_bytes,
+        follow_redirects=follow_redirects,
+        extract_links=extract_links,
+        return_json=return_json,
+    )
+
+
+@mcp.tool()
+async def fetch_url_rendered(
+    url: str,
+    text_only: bool = True,
+    timeout: float = 10.0,
+    max_bytes: int = 2_000_000,
+    follow_redirects: bool = True,
+    extract_links: bool = False,
+    return_json: bool = False,
+) -> str:
+    """Convenience alias for JS-rendered fetch (render_js=True)."""
+    return await fetch_url_impl(
+        url,
+        text_only=text_only,
+        render_js=True,
+        timeout=timeout,
+        max_bytes=max_bytes,
+        follow_redirects=follow_redirects,
+        extract_links=extract_links,
+        return_json=return_json,
     )
 
 

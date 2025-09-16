@@ -52,6 +52,8 @@ fast-flights==2.2
     # via bhinneka
 fastmcp==2.12.3
     # via bhinneka
+greenlet==3.2.4
+    # via playwright
 h11==0.16.0
     # via httpcore
     # via uvicorn
@@ -106,6 +108,8 @@ parse==1.20.2
     # via openapi-core
 pathable==0.4.4
     # via jsonschema-path
+playwright==1.55.0
+    # via bhinneka
 primp==0.15.0
     # via fast-flights
 protobuf==6.32.1
@@ -121,6 +125,8 @@ pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
     # via mcp
+pyee==13.0.0
+    # via playwright
 pygments==2.19.2
     # via rich
 pyperclip==1.9.0
@@ -169,6 +175,7 @@ typing-extensions==4.15.0
     # via openapi-core
     # via pydantic
     # via pydantic-core
+    # via pyee
     # via typer
     # via typing-inspection
 typing-inspection==0.4.1

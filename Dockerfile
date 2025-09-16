@@ -18,7 +18,8 @@ COPY pyproject.toml README.md ./
 
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir .
+    pip install --no-cache-dir . && \
+    pip install --no-cache-dir playwright
 
 # Copy source code and install the package
 COPY src/ ./src/
@@ -39,6 +40,10 @@ ENV PATH="/app/venv/bin:$PATH"
 
 # Copy virtual environment from builder stage
 COPY --from=builder --chown=mcp:mcp /app/venv /app/venv
+
+# Install Playwright browsers and system deps (Chromium)
+USER root
+RUN /app/venv/bin/python -m playwright install --with-deps chromium
 
 # Change to non-root user
 USER mcp

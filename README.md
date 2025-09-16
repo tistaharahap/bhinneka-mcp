@@ -198,6 +198,22 @@ These tools require `SEARXNG_BASE_URL` to be set (e.g., `https://searxng-dxb.ban
 - `searx_search_json(query, category?, engines?, language?, time_range?, safesearch?, max_results?)`
   Returns compact JSON string for programmatic use.
 
+### URL Fetch Tools
+
+Fetch web pages safely with optional JS rendering.
+
+- `fetch_url(url, text_only=true, render_js=false, timeout=10, max_bytes=2000000, follow_redirects=true, extract_links=false, return_json=false)`
+  Static fetch by default. Blocks localhost/private networks. Returns readable text with title/description/lang.
+  Add `extract_links=true` to include absolute anchors.
+
+- `fetch_url_rendered(url, text_only=true, timeout=10, max_bytes=2000000, follow_redirects=true, extract_links=false, return_json=false)`
+  Same as `fetch_url` but with `render_js=true` for SPA pages (uses Playwright/Chromium). Heavier and slower; use only when needed.
+
+Notes:
+- With `text_only=true` (default), HTML/CSS/JS are stripped.
+- SPAs often require `render_js=true` to capture dynamic content.
+- Non-HTML types (JSON, text/plain) are returned as pretty text.
+
 ## Development Setup
 
 ### Requirements
