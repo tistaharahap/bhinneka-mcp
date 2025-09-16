@@ -26,6 +26,17 @@ uvx google-flights-mcp --help
 pip install google-flights-mcp
 ```
 
+### Using Docker (For Remote Deployment)
+
+```bash
+# Build and run with Docker
+docker build -t google-flights-mcp .
+docker run -p 8000:8000 google-flights-mcp
+
+# Or use docker-compose for easier management
+docker-compose up
+```
+
 ## Quick Start with uvx
 
 ### MCP Server Modes
@@ -211,6 +222,95 @@ rye run ruff format
 ### Environment Variables
 
 The server uses standard MCP environment variables and configurations. No API keys are required as it uses public Google Flights data via the fast-flights library.
+
+## Docker Deployment
+
+### Building and Running with Docker
+
+```bash
+# Build the Docker image
+docker build -t google-flights-mcp .
+
+# Run the container
+docker run -d \
+  --name google-flights-mcp \
+  -p 8000:8000 \
+  --restart unless-stopped \
+  google-flights-mcp
+
+# Check container logs
+docker logs google-flights-mcp
+
+# Stop the container
+docker stop google-flights-mcp
+```
+
+### Using Docker Compose (Recommended)
+
+The repository includes a `docker-compose.yml` file for easier deployment:
+
+```bash
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the service
+docker-compose down
+
+# Rebuild and restart
+docker-compose up --build -d
+```
+
+### Production Deployment with Nginx
+
+For production deployments, use the nginx profile for reverse proxy and SSL termination:
+
+```bash
+# Start with nginx reverse proxy
+docker-compose --profile production up -d
+
+# This will start both the MCP server and nginx
+# Configure SSL certificates in ./ssl/ directory
+# Customize nginx.conf for your domain and SSL setup
+```
+
+### Docker Configuration
+
+The Docker setup includes:
+
+- **Multi-stage build** for optimized image size
+- **Non-root user** for enhanced security
+- **Health checks** for container monitoring
+- **HTTP transport** configured for remote access
+- **Port 8000** exposed for MCP client connections
+
+### Environment Variables
+
+You can customize the deployment using environment variables:
+
+```bash
+# Custom host and port
+docker run -p 9000:9000 \
+  -e GOOGLE_FLIGHTS_HOST=0.0.0.0 \
+  -e GOOGLE_FLIGHTS_PORT=9000 \
+  google-flights-mcp
+
+# Or in docker-compose.yml:
+environment:
+  - GOOGLE_FLIGHTS_HOST=0.0.0.0
+  - GOOGLE_FLIGHTS_PORT=8000
+```
+
+### Connecting to Dockerized MCP Server
+
+When running in Docker, the server is accessible via HTTP transport:
+
+- **Local access**: `http://localhost:8000/mcp`
+- **Remote access**: `http://your-server-ip:8000/mcp`
+
+Configure your MCP client to connect to the HTTP endpoint instead of stdio transport.
 
 ## Data Source
 

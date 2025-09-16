@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  google-flights-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: google-flights-mcp
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.settimeout(1); s.connect(('localhost', 8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mcp-network
+
+  # Optional: Add a reverse proxy for production deployments
+  nginx:
+    image: nginx:alpine
+    container_name: google-flights-mcp-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - google-flights-mcp
+    restart: unless-stopped
+    networks:
+      - mcp-network
+    profiles:
+      - production
+
+networks:
+  mcp-network:
+    driver: bridge
+
+# Example usage:
+# Development: docker-compose up google-flights-mcp
+# Production with nginx: docker-compose --profile production up
