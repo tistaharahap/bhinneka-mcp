@@ -37,13 +37,16 @@ WORKDIR /app
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/app/venv/bin:$PATH"
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Copy virtual environment from builder stage
 COPY --from=builder --chown=mcp:mcp /app/venv /app/venv
 
-# Install Playwright browsers and system deps (Chromium)
+# Install Playwright browsers and system deps (Chromium) to a shared path
 USER root
-RUN /app/venv/bin/python -m playwright install --with-deps chromium
+RUN mkdir -p /ms-playwright \
+    && /app/venv/bin/python -m playwright install --with-deps chromium \
+    && chown -R mcp:mcp /ms-playwright
 
 # Change to non-root user
 USER mcp
