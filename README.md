@@ -1,6 +1,6 @@
-# Google Flights MCP Server
+# Bhinneka MCP Toolkit
 
-A FastMCP server that provides Google Flights data access via Model Context Protocol (MCP). Search for flights, find airports, and get pricing information through standardized MCP tools.
+A FastMCP server that provides both Google Flights utilities and SearXNG web search via Model Context Protocol (MCP). Search for flights, look up airports, and perform web/news/image searches with standardized MCP tools.
 
 ## Features
 
@@ -17,21 +17,21 @@ A FastMCP server that provides Google Flights data access via Model Context Prot
 
 ```bash
 # Install and run directly with uvx
-uvx google-flights-mcp --help
+uvx bhinneka --help
 ```
 
 ### Using pip
 
 ```bash
-pip install google-flights-mcp
+pip install bhinneka
 ```
 
 ### Using Docker (For Remote Deployment)
 
 ```bash
 # Build and run with Docker
-docker build -t google-flights-mcp .
-docker run -p 8000:8000 google-flights-mcp
+docker build -t bhinneka .
+docker run -p 8000:8000 bhinneka
 
 # Or use docker-compose for easier management
 docker-compose up
@@ -43,37 +43,37 @@ docker-compose up
 
 ```bash
 # Default mode (stdio transport for Claude Desktop and MCP clients)
-uvx google-flights-mcp serve
+uvx bhinneka serve
 
 # HTTP mode (for remote access)
-uvx google-flights-mcp serve --transport http --host 0.0.0.0 --port 8000
+uvx bhinneka serve --transport http --host 0.0.0.0 --port 8000
 
 # Check server status and capabilities
-uvx google-flights-mcp status
+uvx bhinneka status
 ```
 
 ### Testing Commands
 
 ```bash
 # Test flight search
-uvx google-flights-mcp test-search LAX JFK 2025-12-25
+uvx bhinneka test-search LAX JFK 2025-12-25
 
 # Test airport search
-uvx google-flights-mcp test-airports "Los Angeles"
+uvx bhinneka test-airports "Los Angeles"
 
 # Show version information
-uvx google-flights-mcp version
+uvx bhinneka version
 ```
 
 ### Short Command Alias
 
-The package also provides a shorter `gf` command:
+The package also provides short aliases: `bn` (new) and legacy `gf`.
 
 ```bash
 # All commands work with the shorter alias
-uvx google-flights-mcp serve
+uvx bhinneka serve
 # is equivalent to
-uvx --from google-flights-mcp gf serve
+uvx --from bhinneka bn serve
 ```
 
 ## MCP Integration
@@ -83,7 +83,7 @@ uvx --from google-flights-mcp gf serve
 For development and testing with MCP Inspector:
 
 ```bash
-uvx google-flights-mcp serve
+uvx bhinneka serve
 ```
 
 Then connect your MCP client to the stdio transport.
@@ -93,7 +93,7 @@ Then connect your MCP client to the stdio transport.
 For production use or remote MCP clients:
 
 ```bash
-uvx google-flights-mcp serve --transport http --host 0.0.0.0 --port 8000
+uvx bhinneka serve --transport http --host 0.0.0.0 --port 8000
 ```
 
 MCP clients can connect to: `http://your-server:8000/mcp`
@@ -105,10 +105,10 @@ To use this MCP server with Claude Desktop, add the following configuration to y
 ```json
 {
   "mcpServers": {
-    "google-flights": {
+    "bhinneka": {
       "command": "uvx",
       "args": [
-        "google-flights-mcp",
+        "bhinneka",
         "serve"
       ]
     }
@@ -130,10 +130,10 @@ For advanced users who prefer HTTP transport for remote access:
 ```json
 {
   "mcpServers": {
-    "google-flights": {
+    "bhinneka": {
       "command": "uvx",
       "args": [
-        "google-flights-mcp",
+        "bhinneka",
         "serve",
         "--transport",
         "http",
@@ -149,7 +149,7 @@ For advanced users who prefer HTTP transport for remote access:
 
 ## Available MCP Tools
 
-### `search_flights`
+### `flights_search`
 Search for flights between two airports.
 
 **Parameters:**
@@ -163,19 +163,19 @@ Search for flights between two airports.
 - `infants` (integer, optional): Number of infant passengers
 - `max_results` (integer): Maximum results to return (default: 6)
 
-### `find_airports`
+### `flights_find_airports`
 Search for airports by code, name, or city.
 
 **Parameters:**
 - `query` (string): Search query (airport code, name, or city)
 - `limit` (integer): Maximum results to return (default: 10)
 
-### `get_cheapest_flights`
+### `flights_get_cheapest`
 Get flights sorted by price (lowest first).
 
 **Parameters:** Same as `search_flights`
 
-### `get_best_flights`
+### `flights_get_best`
 Get Google's recommended "best" flights balancing price, duration, and convenience.
 
 **Parameters:** Same as `search_flights`
@@ -184,6 +184,19 @@ Get Google's recommended "best" flights balancing price, duration, and convenien
 Get server status and capabilities information.
 
 **Parameters:** None
+
+### SearXNG Web Search Tools
+
+These tools require `SEARXNG_BASE_URL` to be set (e.g., `https://searxng-dxb.bango29.com`).
+
+- `searx_web_search(query, engines?, language?, time_range?, safesearch?, max_results?)`
+  General web search. Returns a concise, readable list.
+- `searx_images_search(query, engines?, language?, safesearch?, max_results?)`
+  Image-focused results; includes image URLs where available.
+- `searx_news_search(query, engines?, language?, time_range?, max_results?)`
+  News category search with optional time range.
+- `searx_search_json(query, category?, engines?, language?, time_range?, safesearch?, max_results?)`
+  Returns compact JSON string for programmatic use.
 
 ## Development Setup
 
@@ -202,10 +215,10 @@ cd google-flights-mcp
 rye sync
 
 # Run the MCP server
-rye run python -m google_flights_mcp.cli serve
+rye run python -m bhinneka.cli serve
 
 # Run tests
-rye run python -m google_flights_mcp.cli test-search LAX JFK 2025-12-25
+rye run python -m bhinneka.cli test-search LAX JFK 2025-12-25
 
 # Code formatting and linting
 rye run ruff check
@@ -221,7 +234,15 @@ rye run ruff format
 
 ### Environment Variables
 
-The server uses standard MCP environment variables and configurations. No API keys are required as it uses public Google Flights data via the fast-flights library.
+The server uses standard MCP environment variables and configurations.
+
+Google Flights tools do not require API keys as they use public data via the `fast-flights` library.
+
+SearXNG tools configuration:
+- `SEARXNG_BASE_URL` (required for `searx_*` tools), e.g. `https://searxng-dxb.bango29.com`
+- `SEARXNG_TIMEOUT` (seconds, default: 8)
+- `SEARXNG_MAX_RESULTS` (default: 10)
+- `SEARXNG_LANGUAGE` (default: `en`)
 
 ## Docker Deployment
 
@@ -229,20 +250,20 @@ The server uses standard MCP environment variables and configurations. No API ke
 
 ```bash
 # Build the Docker image
-docker build -t google-flights-mcp .
+docker build -t bhinneka .
 
 # Run the container
 docker run -d \
-  --name google-flights-mcp \
+  --name bhinneka \
   -p 8000:8000 \
   --restart unless-stopped \
-  google-flights-mcp
+  bhinneka
 
 # Check container logs
-docker logs google-flights-mcp
+docker logs bhinneka
 
 # Stop the container
-docker stop google-flights-mcp
+docker stop bhinneka
 ```
 
 ### Using Docker Compose (Recommended)
@@ -295,7 +316,7 @@ You can customize the deployment using environment variables:
 docker run -p 9000:9000 \
   -e GOOGLE_FLIGHTS_HOST=0.0.0.0 \
   -e GOOGLE_FLIGHTS_PORT=9000 \
-  google-flights-mcp
+  bhinneka
 
 # Or in docker-compose.yml:
 environment:

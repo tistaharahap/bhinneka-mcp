@@ -1,4 +1,4 @@
-"""Pydantic models for Google Flights MCP Server."""
+"""Pydantic models for Bhinneka MCP Toolkit."""
 
 from __future__ import annotations
 
@@ -149,7 +149,7 @@ class AirportSearchResponse(BaseModel):
 class ServerStatus(BaseModel):
     """MCP server status information."""
 
-    service_name: str = "Google Flights MCP"
+    service_name: str = "Bhinneka MCP"
     version: str = "0.1.0"
     status: str = "online"
     data_source: str = "fast-flights"

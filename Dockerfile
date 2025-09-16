@@ -51,4 +51,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('localhost', 8000)); s.close()" || exit 1
 
 # Default command - run MCP server with HTTP transport
-CMD ["google-flights-mcp", "serve", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["bhinneka", "serve", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]

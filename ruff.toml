@@ -1,4 +1,4 @@
-# Ruff configuration for Google Flights MCP
+# Ruff configuration for Bhinneka MCP Toolkit
 target-version = "py313"
 line-length = 120
 
@@ -139,7 +139,7 @@ exclude = [
 
 [lint.isort]
 known-first-party = [
-    "google_flights_mcp",
+    "bhinneka",
 ]
 combine-as-imports = true
 force-wrap-aliases = true

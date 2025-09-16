@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Google Flights MCP Server - A FastMCP server that provides Google Flights data access via Model Context Protocol. The server uses the `fast-flights` library to fetch flight data and presents it through standardized MCP tools.
+Bhinneka MCP Toolkit — A FastMCP server that provides Google Flights utilities and SearXNG web search via Model Context Protocol. The server uses the `fast-flights` library for flights and SearXNG's JSON API for web search.
 
 ## Development Commands
 
@@ -20,26 +20,26 @@ rye run <command>
 ### Running the Server
 ```bash
 # Development mode (stdio transport for MCP Inspector)
-rye run python -m google_flights_mcp.cli dev
+rye run python -m bhinneka.cli dev
 
 # Production mode (HTTP transport for remote access)
-rye run python -m google_flights_mcp.cli serve --host 0.0.0.0 --port 8000
+rye run python -m bhinneka.cli serve --host 0.0.0.0 --port 8000
 
 # Using installed CLI shortcuts
-rye run google-flights-mcp dev
-rye run gf dev
+rye run bhinneka dev
+rye run bn dev
 ```
 
 ### Testing
 ```bash
 # Test flight search functionality
-rye run python -m google_flights_mcp.cli test-search LAX JFK 2025-12-25
+rye run python -m bhinneka.cli test-search LAX JFK 2025-12-25
 
 # Test airport search functionality  
-rye run python -m google_flights_mcp.cli test-airports "Los Angeles"
+rye run python -m bhinneka.cli test-airports "Los Angeles"
 
 # Check server status and capabilities
-rye run python -m google_flights_mcp.cli status
+rye run python -m bhinneka.cli status
 ```
 
 ### Code Quality
@@ -65,11 +65,9 @@ The codebase follows a separation pattern between MCP tool decorators and implem
 
 ### Key Modules
 
-**`server.py`** - Core MCP server with flight search tools:
-- `_search_flights_impl()` / `search_flights()` - General flight search
-- `_find_airports_impl()` / `find_airports()` - Airport lookup with local database
-- `_get_cheapest_flights_impl()` / `get_cheapest_flights()` - Price-optimized search
-- `_get_best_flights_impl()` / `get_best_flights()` - Google's recommended flights
+**`server.py`** - Core MCP server with namespaced tools (flights_* and searx_*). Logic lives under `bhinneka/tools`.
+**`tools/flights.py`** - `_search_flights_impl()`, `_find_airports_impl()`, `_get_cheapest_flights_impl()`, `_get_best_flights_impl()`
+**`tools/searx.py`** - `searx_search_impl()` JSON-based web search
 
 **`models.py`** - Pydantic data models for validation and type safety
 

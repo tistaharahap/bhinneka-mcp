@@ -1,4 +1,4 @@
-"""CLI interface for Google Flights MCP Server using Typer."""
+"""CLI interface for Bhinneka MCP Toolkit using Typer."""
 
 from __future__ import annotations
 
@@ -10,12 +10,12 @@ from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
 
-from google_flights_mcp.server import create_server
+from bhinneka.server import create_server
 
 # Initialize Typer app and Rich console
 app = typer.Typer(
-    name="google-flights-mcp",
-    help="🛫 Google Flights MCP Server - Access flight data via Model Context Protocol",
+    name="bhinneka",
+    help="🛫 Bhinneka MCP Toolkit — Flights + Web Search",
     add_completion=False,
     rich_markup_mode="rich",
 )
@@ -30,7 +30,7 @@ def serve_command(
     log_level: Annotated[str, typer.Option("--log-level", "-l", help="Logging level")] = "INFO",
 ) -> None:
     """
-    🚀 Start the Google Flights MCP server.
+    🚀 Start the Bhinneka MCP server.
 
     By default uses stdio transport for Claude Desktop and MCP clients.
     Use --transport http for remote HTTP access.
@@ -48,7 +48,7 @@ def serve_command(
         if transport.lower() == "stdio":
             # stdio transport for Claude Desktop
             startup_panel = Panel.fit(
-                f"[bold green]🛫 Google Flights MCP Server[/bold green]\n\n"
+                f"[bold green]🛫 Bhinneka MCP Server[/bold green]\n\n"
                 f"[cyan]Transport:[/cyan] stdio\n"
                 f"[cyan]Log Level:[/cyan] {log_level}\n\n"
                 f"[yellow]Ready for Claude Desktop and MCP clients[/yellow]\n"
@@ -65,7 +65,7 @@ def serve_command(
             # HTTP transport for remote access
             actual_transport = "streamable-http"
             startup_panel = Panel.fit(
-                f"[bold green]🛫 Google Flights MCP Server[/bold green]\n\n"
+                f"[bold green]🛫 Bhinneka MCP Server[/bold green]\n\n"
                 f"[cyan]Transport:[/cyan] {actual_transport}\n"
                 f"[cyan]Host:[/cyan] {host}\n"
                 f"[cyan]Port:[/cyan] {port}\n"
@@ -143,7 +143,7 @@ def status_command() -> None:
     supported features, and current configuration.
     """
     try:
-        from google_flights_mcp.models import ServerStatus
+        from bhinneka.models import ServerStatus
 
         status = ServerStatus()
 
@@ -191,7 +191,7 @@ def test_search_command(
     try:
         import asyncio
 
-        from google_flights_mcp.server import _search_flights_impl
+        from bhinneka.tools.flights import _search_flights_impl
 
         async def run_search() -> str:
             return await _search_flights_impl(
@@ -236,7 +236,7 @@ def test_airports_command(
     try:
         import asyncio
 
-        from google_flights_mcp.server import _find_airports_impl
+        from bhinneka.tools.flights import _find_airports_impl
 
         async def run_search() -> str:
             return await _find_airports_impl(query=query, limit=limit)
@@ -264,7 +264,7 @@ def test_airports_command(
 def version_command() -> None:
     """📋 Show version information."""
     try:
-        from google_flights_mcp.models import ServerStatus
+        from bhinneka.models import ServerStatus
 
         status = ServerStatus()
         rprint(f"[bold green]{status.service_name}[/bold green] version [cyan]{status.version}[/cyan]")
