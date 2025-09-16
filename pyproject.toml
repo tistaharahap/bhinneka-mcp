@@ -19,9 +19,6 @@ requires-python = ">= 3.8"
 # New preferred entry points
 bhinneka = "bhinneka.cli:main"
 bn = "bhinneka.cli:main"
-# Backward-compatible aliases
-google-flights-mcp = "bhinneka.cli:main"
-gf = "bhinneka.cli:main"
 
 [build-system]
 requires = ["hatchling"]
