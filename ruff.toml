@@ -1,0 +1,167 @@
+# Ruff configuration for Google Flights MCP
+target-version = "py313"
+line-length = 120
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings  
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "Q",   # flake8-quotes
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "PTH", # flake8-use-pathlib
+    "DTZ", # flake8-datetimez (timezone-aware datetime)
+    "RUF", # Ruff-specific rules
+    "S",   # flake8-bandit (security)
+    "N",   # pep8-naming
+    "A",   # flake8-builtins
+    "C90", # mccabe (complexity)
+    "T20", # flake8-print (no print statements)
+]
+
+ignore = [
+    "E501",   # line too long (handled by line-length)
+    "B008",   # function call in default argument
+    "C901",   # complex function (handled by mccabe with custom threshold)
+    "F821",   # undefined name (handled by mypy)
+    "N801",   # class name should be CamelCase (false positives with certain naming patterns)
+    "N815",   # variable in function should be lowercase (false positive with constants)
+    "N818",   # constant in function should be uppercase (false positive with certain patterns)
+    "UP007",  # Use `X | Y` for union types (we allow Optional for clarity)
+    "UP006",  # Use `list` instead of `List` for type annotations
+    "UP035",  # Use `dict` instead of `Dict` for type annotations
+    "UP037",  # Use `set` instead of `Set` for type annotations  
+    "UP014",  # Use `tuple` instead of `Tuple` for type annotations
+    "RUF012", # mutable class attribute (common pattern in some cases)
+    "S101",   # use of assert (common in tests and valid in production code)
+    "S104",   # binding to all interfaces (0.0.0.0) - common for APIs
+    "S105",   # hardcoded password string - handled by other security tools
+    "S106",   # hardcoded password function argument - handled by other security tools
+    "N805",   # first argument of a method should be named `self` (false positives with classmethod)
+    "T201",   # print found (allow for debugging and CLI tools)
+    "A003",   # builtin attribute shadowing (too restrictive)
+]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Exclude auto-generated files and other directories
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "migrations",
+    "htmlcov",
+    "*.egg-info",
+    "__pycache__",
+    # Excluded modules - experimental/demo/middleware
+    "src/appocf",
+    "src/appsqldemo", 
+    "src/middleware",
+    "src/scripts",
+]
+
+[lint.per-file-ignores]
+# Tests can have more flexible rules
+"tests/**/*.py" = [
+    "B011",   # assert False
+    "S101",   # use of assert
+    "SIM117", # combine multiple with statements
+    "T201",   # print statements allowed in tests
+    "S105",   # hardcoded password string (test fixtures)
+    "S106",   # hardcoded password function argument (test fixtures) 
+    "C901",   # complex functions allowed in tests
+    "N802",   # function name should be lowercase (test methods can vary)
+]
+
+# CLI scripts can use print statements and have more flexibility for scripting patterns
+"src/appclis/**/*.py" = [
+    "T201",   # print statements allowed in CLI
+    "T203",   # pprint allowed in CLI
+    "S101",   # use of assert (common in scripts for validation)
+    "S112",   # try-except-continue (acceptable in scripts)
+    "S110",   # try-except-pass (acceptable in scripts)  
+    "C901",   # complex functions allowed in scripts
+    "PLR0913", # too many arguments (scripts can have many CLI params)
+    "PLR0912", # too many branches (scripts can have complex logic)
+    "PLR0915", # too many statements (scripts can be longer)
+    "B008",   # function call in default argument (common in CLI with Click/Typer)
+    "S603",   # subprocess call without shell=False (scripts may need shell access)
+    "S607",   # starting process with partial path (scripts may use system commands)
+    "SIM117", # multiple with statements (scripts may need many context managers)
+    "DTZ005", # datetime.now() without timezone (scripts may work with local time)
+    "DTZ007", # datetime.strptime without timezone (scripts may parse local dates)
+    "S105",   # hardcoded password string (test/migration credentials may be hardcoded)
+    "S106",   # hardcoded password function argument (acceptable in migration scripts)
+    "S311",   # suspicious non-cryptographic random usage (scripts may use simple random)
+    "F841",   # unused variable (scripts may have debug variables)
+    "SIM102", # collapsible if statements (scripts prioritize readability over optimization)
+    "UP032",  # f-string (scripts may use older string formatting for compatibility)
+    "B023",   # function uses loop variable (acceptable in quick scripts)
+    "RUF012", # mutable class default (scripts may use simpler patterns)
+]
+
+# Scripts directory can use print statements
+"src/scripts/**/*.py" = [
+    "T201",   # print statements allowed in scripts
+]
+
+# Ignore import order in __init__.py files
+"**/__init__.py" = ["F401", "I001"]
+
+# Allow more flexibility in migration and seeding scripts
+"**/migrations/**/*.py" = ["S101", "T201"]
+"**/seeds/**/*.py" = ["S101", "T201"]
+
+[lint.isort]
+known-first-party = [
+    "google_flights_mcp",
+]
+combine-as-imports = true
+force-wrap-aliases = true
+
+[lint.mccabe]
+# Set complexity threshold (default is 10, but for financial systems we might want stricter)
+max-complexity = 10
+
+[lint.flake8-quotes]
+inline-quotes = "double"
+multiline-quotes = "double"
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[lint.flake8-builtins]
+# Allow some common patterns that might shadow builtins
+builtins-ignorelist = ["id", "type", "input", "filter", "format"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
