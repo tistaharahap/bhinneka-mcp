@@ -214,6 +214,26 @@ Notes:
 - SPAs often require `render_js=true` to capture dynamic content.
 - Non-HTML types (JSON, text/plain) are returned as pretty text.
 
+### Context7 Documentation Tools
+
+Search libraries and retrieve documentation text from Context7.
+
+- `context7_search(query, client_ip?, api_key?, return_json=false)`
+  Searches Context7 libraries by query. Returns a readable list or JSON when `return_json=true`.
+
+- `context7_fetch(library_id, tokens?, topic?, type_hint?, client_ip?, api_key?)`
+  Fetches documentation for a specific library ID. Defaults to `type=txt`. Returns the documentation text or an error message if unavailable.
+
+Environment variables:
+- `CONTEXT7_BASE_URL` (default: `https://context7.com/api`)
+- `CONTEXT7_API_KEY` (optional): Bearer token for private access
+- `CONTEXT7_TIMEOUT` (seconds, default: 15)
+- `CLIENT_IP_ENCRYPTION_KEY` (optional, hex-64). If present, client IP may be included (unencrypted fallback if encryption not available).
+
+Notes:
+- You can pass `client_ip` and `api_key` per-call; env vars are used by default.
+- The tools handle rate limits (429), unauthorized (401), and not found (404) with clear messages.
+
 ## Development Setup
 
 ### Requirements

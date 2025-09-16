@@ -14,6 +14,8 @@ from bhinneka.tools import (
     _get_best_flights_impl,
     _get_cheapest_flights_impl,
     _search_flights_impl,
+    context7_fetch_impl,
+    context7_search_impl,
     fetch_url_impl,
     searx_search_impl,
 )
@@ -242,6 +244,40 @@ async def fetch_url_rendered(
         follow_redirects=follow_redirects,
         extract_links=extract_links,
         return_json=return_json,
+    )
+
+
+# =========================
+# Context7 MCP tools
+# =========================
+
+
+@mcp.tool()
+async def context7_search(query: str, client_ip: str | None = None, api_key: str | None = None, return_json: bool = False) -> str:
+    """Search Context7 libraries by query string."""
+    return await context7_search_impl(query, client_ip=client_ip, api_key=api_key, return_json=return_json)
+
+
+@mcp.tool()
+async def context7_fetch(
+    library_id: str,
+    tokens: int | None = None,
+    topic: str | None = None,
+    type_hint: str | None = None,
+    client_ip: str | None = None,
+    api_key: str | None = None,
+) -> str:
+    """Fetch documentation text for a Context7 library.
+
+    Parameters mirror the upstream API. Defaults to type=txt.
+    """
+    return await context7_fetch_impl(
+        library_id,
+        tokens=tokens,
+        topic=topic,
+        type_hint=type_hint,
+        client_ip=client_ip,
+        api_key=api_key,
     )
 
 
