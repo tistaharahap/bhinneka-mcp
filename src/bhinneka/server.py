@@ -6,6 +6,7 @@ Exposes namespaced MCP tools while delegating logic to bhinneka.tools.
 from __future__ import annotations
 
 import logging
+
 from fastmcp import FastMCP
 
 from bhinneka.models import ServerStatus
@@ -28,7 +29,10 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("bhinneka")
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Flights: Search",
+    description="Search flights between airports via Google Flights (fast-flights).",
+)
 async def flights_search(
     origin: str,
     destination: str,
@@ -56,13 +60,19 @@ async def flights_search(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Flights: Find Airports",
+    description="Find matching airports by name, city, or IATA/ICAO code.",
+)
 async def flights_find_airports(query: str, limit: int = 10) -> str:
     """Find airports matching a search query."""
     return await _find_airports_impl(query, limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Flights: Cheapest",
+    description="Return cheapest flights for a route/date, sorted by price.",
+)
 async def flights_get_cheapest(
     origin: str,
     destination: str,
@@ -82,7 +92,10 @@ async def flights_get_cheapest(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Flights: Best",
+    description="Return 'best' flights per Google Flights relevance.",
+)
 async def flights_get_best(
     origin: str,
     destination: str,
@@ -107,7 +120,10 @@ async def flights_get_best(
 # =========================
 
 
-@mcp.tool()
+@mcp.tool(
+    title="SearXNG: Web Search",
+    description="General web search using SearXNG; returns summarized results.",
+)
 async def searx_web_search(
     query: str,
     engines: str | None = None,
@@ -128,7 +144,10 @@ async def searx_web_search(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    title="SearXNG: Image Search",
+    description="Search images via SearXNG.",
+)
 async def searx_images_search(
     query: str,
     engines: str | None = None,
@@ -147,7 +166,10 @@ async def searx_images_search(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    title="SearXNG: News Search",
+    description="Search news via SearXNG with optional time range.",
+)
 async def searx_news_search(
     query: str,
     engines: str | None = None,
@@ -167,7 +189,10 @@ async def searx_news_search(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    title="SearXNG: Raw Search (JSON)",
+    description="Generic SearXNG search returning compact JSON string.",
+)
 async def searx_search_json(
     query: str,
     category: str | None = None,
@@ -195,7 +220,10 @@ async def searx_search_json(
 # =========================
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Fetch: URL",
+    description="Safely fetch a URL and extract readable text; optional JS rendering.",
+)
 async def fetch_url(
     url: str,
     text_only: bool = True,
@@ -224,7 +252,10 @@ async def fetch_url(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Fetch: URL (Rendered)",
+    description="Fetch a URL with Playwright JS rendering; useful for SPA pages.",
+)
 async def fetch_url_rendered(
     url: str,
     text_only: bool = True,
@@ -252,13 +283,21 @@ async def fetch_url_rendered(
 # =========================
 
 
-@mcp.tool()
-async def context7_search(query: str, client_ip: str | None = None, api_key: str | None = None, return_json: bool = False) -> str:
+@mcp.tool(
+    title="Context7: Search",
+    description="Search Context7 libraries; supports client_ip and api_key.",
+)
+async def context7_search(
+    query: str, client_ip: str | None = None, api_key: str | None = None, return_json: bool = False
+) -> str:
     """Search Context7 libraries by query string."""
     return await context7_search_impl(query, client_ip=client_ip, api_key=api_key, return_json=return_json)
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Context7: Fetch",
+    description="Fetch documentation for a Context7 library (txt by default).",
+)
 async def context7_fetch(
     library_id: str,
     tokens: int | None = None,
@@ -281,7 +320,10 @@ async def context7_fetch(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Server: Status",
+    description="Show MCP server status, capabilities, and usage examples.",
+)
 async def get_server_status() -> str:
     """Get current status and capabilities of the MCP server."""
     try:
@@ -308,7 +350,7 @@ async def get_server_status() -> str:
             ]
         )
         return "\n".join(status_lines)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Status check error")
         return f"❌ Error getting server status: {e!s}"
 

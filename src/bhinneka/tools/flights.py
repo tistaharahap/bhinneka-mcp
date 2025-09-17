@@ -147,16 +147,12 @@ async def _search_flights_impl(
 
         result_dict = asdict(result)
         if not result_dict or "flights" not in result_dict:
-            return (
-                f"❌ No flights found for route {request.origin} → {request.destination} on {request.departure_date}"
-            )
+            return f"❌ No flights found for route {request.origin} → {request.destination} on {request.departure_date}"
 
         flights_data = result_dict["flights"][: request.max_results]
         current_price = result_dict.get("current_price", "Unknown")
         if not flights_data:
-            return (
-                f"❌ No flights available for {request.origin} → {request.destination} on {request.departure_date}"
-            )
+            return f"❌ No flights available for {request.origin} → {request.destination} on {request.departure_date}"
 
         flights = [_parse_flight_data(flight_data) for flight_data in flights_data]
 
@@ -192,7 +188,7 @@ async def _search_flights_impl(
     except ValidationError as e:
         error_details = "; ".join([f"{err['loc'][0]}: {err['msg']}" for err in e.errors()])
         return f"❌ Invalid request parameters: {error_details}"
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Flight search error")
         return f"❌ Error searching flights: {e!s}"
 
@@ -214,7 +210,7 @@ async def _find_airports_impl(query: str, limit: int = 10) -> str:
                         city = "Unknown"
                         country = "Unknown"
                         local_results.append((code, airport_name, city, country))
-            except Exception as fallback_error:  # noqa: BLE001
+            except Exception as fallback_error:
                 logger.warning("Fast-flights fallback search failed: %s", fallback_error)
 
         if not local_results:
@@ -222,9 +218,7 @@ async def _find_airports_impl(query: str, limit: int = 10) -> str:
 
         airports = []
         for code, name, city, country in local_results:
-            airports.append(
-                Airport(code=code, name=name, city=city, country=country, timezone=None)
-            )
+            airports.append(Airport(code=code, name=name, city=city, country=country, timezone=None))
 
         response = AirportSearchResponse(
             query=request.query,
@@ -247,7 +241,7 @@ async def _find_airports_impl(query: str, limit: int = 10) -> str:
     except ValidationError as e:
         error_details = "; ".join([f"{err['loc'][0]}: {err['msg']}" for err in e.errors()])
         return f"❌ Invalid search parameters: {error_details}"
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Airport search error")
         return f"❌ Error searching airports: {e!s}"
 
@@ -274,7 +268,7 @@ async def _get_cheapest_flights_impl(
         header = f"💰 CHEAPEST FLIGHTS: {origin.upper()} → {destination.upper()}\n"
         header += f"🎯 Showing top {max_results} lowest-priced options\n\n"
         return header + search_result
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Cheapest flights search error")
         return f"❌ Error finding cheapest flights: {e!s}"
 
@@ -301,6 +295,6 @@ async def _get_best_flights_impl(
         header = f"⭐ BEST FLIGHTS: {origin.upper()} → {destination.upper()}\n"
         header += f"🎯 Google's recommended options (showing up to {max_results})\n\n"
         return header + search_result
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Best flights search error")
         return f"❌ Error finding best flights: {e!s}"

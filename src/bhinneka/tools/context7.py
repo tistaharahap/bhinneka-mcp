@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import httpx
 
@@ -38,7 +38,9 @@ def _valid_hex_key_32_bytes(hex_key: str | None) -> bool:
         return False
 
 
-def _generate_headers(client_ip: Optional[str], api_key: Optional[str], extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+def _generate_headers(
+    client_ip: str | None, api_key: str | None, extra: Dict[str, str] | None = None
+) -> Dict[str, str]:
     headers: Dict[str, str] = {}
     if extra:
         headers.update(extra)
@@ -55,7 +57,9 @@ def _generate_headers(client_ip: Optional[str], api_key: Optional[str], extra: O
     return headers
 
 
-async def context7_search_impl(query: str, *, client_ip: Optional[str] = None, api_key: Optional[str] = None, return_json: bool = False) -> str:
+async def context7_search_impl(
+    query: str, *, client_ip: str | None = None, api_key: str | None = None, return_json: bool = False
+) -> str:
     try:
         if not query.strip():
             return "❌ Query is required"
@@ -93,7 +97,7 @@ async def context7_search_impl(query: str, *, client_ip: Optional[str] = None, a
                     desc = desc[:200].rstrip() + "…"
                 lines.append(f"{i}. {name} ({rid})\n   {desc}")
         return "\n".join(lines)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Context7 search error")
         return f"❌ Error searching Context7: {e!s}"
 
@@ -101,11 +105,11 @@ async def context7_search_impl(query: str, *, client_ip: Optional[str] = None, a
 async def context7_fetch_impl(
     library_id: str,
     *,
-    tokens: Optional[int] = None,
-    topic: Optional[str] = None,
-    type_hint: Optional[str] = None,
-    client_ip: Optional[str] = None,
-    api_key: Optional[str] = None,
+    tokens: int | None = None,
+    topic: str | None = None,
+    type_hint: str | None = None,
+    client_ip: str | None = None,
+    api_key: str | None = None,
 ) -> str:
     try:
         lib = library_id.lstrip("/")
@@ -121,7 +125,7 @@ async def context7_fetch_impl(
                 return "❌ tokens must be an integer"
         if topic:
             params["topic"] = topic
-        params["type"] = (type_hint or CONTEXT7_DEFAULT_TYPE or "txt")
+        params["type"] = type_hint or CONTEXT7_DEFAULT_TYPE or "txt"
 
         headers = _generate_headers(client_ip, api_key, {"X-Context7-Source": "mcp-server"})
 
@@ -140,7 +144,6 @@ async def context7_fetch_impl(
         if not text or text.strip() in {"No content available", "No context data available"}:
             return "(no content)"
         return text
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("Context7 fetch error")
         return f"❌ Error fetching Context7 documentation: {e!s}"
-

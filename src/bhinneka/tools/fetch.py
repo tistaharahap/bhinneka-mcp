@@ -6,15 +6,15 @@ Optionally supports JS rendering via Playwright when explicitly enabled.
 
 from __future__ import annotations
 
-import asyncio
+import contextlib
 import logging
 import re
 import socket
 from dataclasses import dataclass
 from html import unescape
 from html.parser import HTMLParser
-from ipaddress import ip_address, IPv4Address, IPv6Address
-from typing import Any, Iterable
+from ipaddress import IPv4Address, IPv6Address, ip_address
+from typing import Any
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -60,7 +60,7 @@ def _is_ip_private(addr: str) -> bool:
 def _host_resolves_to_private(host: str) -> bool:
     try:
         infos = socket.getaddrinfo(host, None)
-    except Exception:  # noqa: BLE001
+    except Exception:
         # If resolution fails, be conservative and block
         return True
     addrs: set[str] = set()
@@ -74,7 +74,7 @@ def _host_resolves_to_private(host: str) -> bool:
 def _is_url_safe(url: str) -> tuple[bool, str | None]:
     try:
         p = urlparse(url)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return False, f"Invalid URL: {e!s}"
     if p.scheme not in SAFE_SCHEMES:
         return False, "Only http(s) URLs are allowed"
@@ -87,8 +87,9 @@ def _is_url_safe(url: str) -> tuple[bool, str | None]:
     try:
         if _is_ip_private(host):
             return False, "Access to private/loopback addresses is blocked"
-    except Exception:
-        pass
+    except Exception as e:
+        # Log and continue to DNS-based checks to avoid silent failures
+        logger.debug("Private IP check failed: %s", e)
     # DNS resolution check
     if _host_resolves_to_private(host):
         return False, "Host resolves to private/loopback address (blocked)"
@@ -111,7 +112,7 @@ class _HTMLTextExtractor(HTMLParser):
         self._links: list[dict[str, str]] = []
         self.script_count = 0
 
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:  # noqa: D401
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag == "script":
             self._in_script += 1
             self.script_count += 1
@@ -159,7 +160,7 @@ class _HTMLTextExtractor(HTMLParser):
                 abs_url = urljoin(self.base_url, href)
                 self._links.append({"url": abs_url, "text": text or ""})
 
-    def handle_endtag(self, tag: str) -> None:  # noqa: D401
+    def handle_endtag(self, tag: str) -> None:
         if tag == "script" and self._in_script:
             self._in_script -= 1
             return
@@ -169,7 +170,7 @@ class _HTMLTextExtractor(HTMLParser):
         if tag == "title" and self._in_title:
             self._in_title -= 1
 
-    def handle_data(self, data: str) -> None:  # noqa: D401
+    def handle_data(self, data: str) -> None:
         if self._in_script or self._in_style:
             return
         if self._in_title:
@@ -198,15 +199,15 @@ class _HTMLTextExtractor(HTMLParser):
         return t or None
 
     @property
-    def description(self) -> str | None:  # noqa: D401
+    def description(self) -> str | None:
         return self._description
 
     @property
-    def language(self) -> str | None:  # noqa: D401
+    def language(self) -> str | None:
         return self._lang
 
     @property
-    def links(self) -> list[dict[str, str]]:  # noqa: D401
+    def links(self) -> list[dict[str, str]]:
         return self._links
 
 
@@ -240,8 +241,8 @@ async def _fetch_static(
 async def _render_with_playwright(url: str, timeout: float, user_agent: str) -> tuple[str, str]:
     try:
         from playwright.async_api import async_playwright  # type: ignore
-    except Exception as e:  # noqa: BLE001
-        raise RuntimeError(f"Playwright not available: {e!s}")
+    except Exception as e:
+        raise RuntimeError(f"Playwright not available: {e!s}") from e
 
     async with async_playwright() as p:  # type: ignore
         browser = await p.chromium.launch(headless=True)
@@ -250,10 +251,8 @@ async def _render_with_playwright(url: str, timeout: float, user_agent: str) -> 
             page = await context.new_page()
             await page.goto(url, wait_until="domcontentloaded", timeout=int(timeout * 1000))
             # Try to settle a bit more, but keep bounded
-            try:
+            with contextlib.suppress(Exception):
                 await page.wait_for_load_state("networkidle", timeout=int(timeout * 1000))
-            except Exception:  # noqa: BLE001
-                pass
             html = await page.content()
             final_url = page.url
             await context.close()
@@ -286,7 +285,7 @@ def _summarize(
     body = res.text or "(no text)"
     if len(body) > max_chars:
         body = body[:max_chars].rstrip() + "…"
-    return "\n".join(header + ["", body])
+    return "\n".join([*header, "", body])
 
 
 async def fetch_url_impl(
@@ -327,7 +326,7 @@ async def fetch_url_impl(
                 ctype = "text/html; charset=utf-8"
                 encoding = "utf-8"
                 raw = html.encode("utf-8", errors="ignore")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 return f"❌ JS rendering failed: {e!s}"
         else:
             final_url, status, ctype, encoding, raw = await _fetch_static(
@@ -357,9 +356,8 @@ async def fetch_url_impl(
                 links = parser.links
 
             # Heuristic for SPA hint
-            if not render_js:
-                if len(text_out or "") < 200 and parser.script_count >= 5:
-                    notes.append("Content looks dynamic; try render_js=true for SPA pages")
+            if not render_js and len(text_out or "") < 200 and parser.script_count >= 5:
+                notes.append("Content looks dynamic; try render_js=true for SPA pages")
 
         elif content_type.startswith("application/json") or content_type.startswith("text/plain"):
             # Pretty print JSON, or just text
@@ -371,7 +369,7 @@ async def fetch_url_impl(
                     text_out = json.dumps(obj, ensure_ascii=False, indent=2)
                 else:
                     text_out = raw.decode(encoding or "utf-8", errors="ignore")
-            except Exception:  # noqa: BLE001
+            except Exception:
                 text_out = raw.decode(encoding or "utf-8", errors="ignore")
         else:
             notes.append("Unsupported content-type for text extraction; returning headers only")
@@ -409,6 +407,6 @@ async def fetch_url_impl(
             return json.dumps(payload, ensure_ascii=False)
 
         return _summarize(result)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("fetch_url_impl error")
         return f"❌ Error fetching URL: {e!s}"

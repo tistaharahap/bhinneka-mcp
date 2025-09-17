@@ -10,4 +10,3 @@ __all__ = ["create_server", "main"]
 def hello() -> str:
     """Legacy hello function."""
     return "Hello from bhinneka!"
-

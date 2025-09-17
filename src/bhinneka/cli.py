@@ -26,7 +26,9 @@ console = Console()
 def serve_command(
     host: Annotated[str, typer.Option("--host", "-h", help="Host to bind the server to")] = "127.0.0.1",
     port: Annotated[int, typer.Option("--port", "-p", help="Port to bind the server to")] = 8000,
-    transport: Annotated[str, typer.Option("--transport", "-t", help="Transport protocol: 'stdio' or 'http'")] = "stdio",
+    transport: Annotated[
+        str, typer.Option("--transport", "-t", help="Transport protocol: 'stdio' or 'http'")
+    ] = "stdio",
     log_level: Annotated[str, typer.Option("--log-level", "-l", help="Logging level")] = "INFO",
 ) -> None:
     """

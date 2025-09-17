@@ -182,4 +182,3 @@ def search_airports_local(query: str, limit: int = 10) -> List[Tuple[str, str, s
                     seen_codes.add(airport[0])
 
     return results[:limit]
-

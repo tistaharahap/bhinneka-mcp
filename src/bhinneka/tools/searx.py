@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import os
 import logging
+import os
 from typing import Any
 
 import httpx
@@ -94,20 +94,15 @@ async def searx_search_impl(
         lines: list[str] = []
         for idx, r in enumerate(normalized, start=1):
             if category == "images" and r.get("image"):
-                lines.append(
-                    f"{idx}. {r['title']}\n   {r['url']}\n   {r.get('image')}\n   {r.get('engine','')}"
-                )
+                lines.append(f"{idx}. {r['title']}\n   {r['url']}\n   {r.get('image')}\n   {r.get('engine', '')}")
             else:
                 snippet_out = r.get("snippet", "")
                 if len(snippet_out) > 300:
                     snippet_out = snippet_out[:300].rstrip() + "…"
-                lines.append(
-                    f"{idx}. {r['title']}\n   {r['url']}\n   {snippet_out}\n   {r.get('engine','')}"
-                )
+                lines.append(f"{idx}. {r['title']}\n   {r['url']}\n   {snippet_out}\n   {r.get('engine', '')}")
         if not lines:
             lines.append("(no results)")
         return "\n".join(header + lines)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.exception("SearXNG search error")
         return f"❌ Error querying SearXNG: {e!s}"
-
