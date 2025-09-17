@@ -101,6 +101,8 @@ uvx bhinneka serve --transport http --host 0.0.0.0 --port 8000
 
 MCP clients can connect to: `http://your-server:8000/mcp`
 
+Authentication for HTTP deployments: see `AUTH.md` for Google OAuth setup and email/domain allowlisting.
+
 ### With Claude Desktop
 
 To use this MCP server with Claude Desktop, add the following configuration to your Claude Desktop settings:

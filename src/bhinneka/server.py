@@ -8,6 +8,8 @@ from __future__ import annotations
 import logging
 
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from bhinneka.models import ServerStatus
 from bhinneka.tools import (
@@ -357,6 +359,29 @@ async def get_server_status() -> str:
 
 def create_server() -> FastMCP:
     """Create and return the configured FastMCP server instance."""
+
+    # Attach a lightweight whoami endpoint for debugging auth when HTTP is enabled
+    @mcp.custom_route("/auth/whoami", methods=["GET"], name="whoami")
+    async def whoami(request: Request) -> JSONResponse:  # type: ignore[func-returns-value]
+        try:
+            from mcp.server.auth.middleware.auth_context import get_access_token
+
+            tok = get_access_token()
+            if not tok:
+                return JSONResponse({"authenticated": False}, status_code=200)
+            return JSONResponse(
+                {
+                    "authenticated": True,
+                    "client_id": tok.client_id,
+                    "scopes": tok.scopes,
+                    "expires_at": tok.expires_at,
+                    "claims": tok.claims,
+                }
+            )
+        except Exception as e:  # pragma: no cover - defensive
+            logger.debug("whoami error: %s", e)
+            return JSONResponse({"authenticated": False}, status_code=200)
+
     return mcp
 
 

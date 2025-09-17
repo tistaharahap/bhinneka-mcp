@@ -9,7 +9,9 @@ import typer
 from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
+from starlette.middleware import Middleware
 
+from bhinneka.auth_middleware import EmailWhitelistMiddleware, _parse_list_env
 from bhinneka.server import create_server
 
 # Initialize Typer app and Rich console
@@ -79,12 +81,61 @@ def serve_command(
             )
             rprint(startup_panel)
 
+            # Configure Google OAuth via FastMCP provider when env is present
+            try:
+                import fastmcp.server.auth.providers.google as google_providers
+            except Exception as e:  # pragma: no cover - optional dependency surface
+                rprint(f"[red]❌ Google auth provider unavailable: {e}[/red]")
+                google_providers = None  # type: ignore[assignment]
+
+            # Prepare auth if configured
+            client_id = os.getenv("FASTMCP_SERVER_AUTH_GOOGLE_CLIENT_ID")
+            client_secret = os.getenv("FASTMCP_SERVER_AUTH_GOOGLE_CLIENT_SECRET")
+            base_url = os.getenv("FASTMCP_SERVER_AUTH_GOOGLE_BASE_URL") or f"http://{host}:{port}"
+            redirect_path = os.getenv("FASTMCP_SERVER_AUTH_GOOGLE_REDIRECT_PATH") or "/auth/callback"
+            # Scopes: request email+profile to get an email claim for whitelisting
+            scopes_env = os.getenv("FASTMCP_SERVER_AUTH_GOOGLE_REQUIRED_SCOPES")
+            required_scopes = [s for s in (scopes_env or "").replace(",", " ").split(" ") if s] or [
+                "openid",
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile",
+            ]
+
+            if client_id and client_secret and google_providers is not None:
+                try:
+                    mcp.auth = google_providers.GoogleProvider(  # type: ignore[assignment]
+                        client_id=client_id,
+                        client_secret=client_secret,
+                        base_url=base_url,
+                        redirect_path=redirect_path,
+                        required_scopes=required_scopes,
+                    )
+                    rprint("[green]🔐 Google OAuth is enabled for HTTP endpoints[/green]")
+                except Exception as e:
+                    rprint(f"[red]❌ Failed to configure Google OAuth: {e}[/red]")
+
+            # Email/domain whitelist middleware (optional)
+            allowed_emails = _parse_list_env(os.getenv("BHINNEKA_AUTH_ALLOWED_EMAILS"))
+            allowed_domains = _parse_list_env(os.getenv("BHINNEKA_AUTH_ALLOWED_DOMAINS"))
+            asgi_middleware: list[Middleware] = []
+            if allowed_emails or allowed_domains:
+                asgi_middleware.append(
+                    Middleware(
+                        EmailWhitelistMiddleware,
+                        allowed_emails=sorted(allowed_emails),
+                        allowed_domains=sorted(allowed_domains),
+                        mcp_path="/mcp",
+                    )
+                )
+                rprint("[yellow]⚠️ Enforcing email/domain whitelist on /mcp requests[/yellow]")
+
             # Start the HTTP server
             mcp.run(
                 transport=actual_transport,
                 host=host,
                 port=port,
                 log_level=log_level.lower(),
+                middleware=asgi_middleware or None,
             )
         else:
             rprint(f"[red]❌ Invalid transport: {transport}. Use 'stdio' or 'http'[/red]")
